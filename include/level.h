@@ -1,7 +1,10 @@
 #ifndef LEVEL_H
 #define LEVEL_H
 
+#include "config.h"
 #include "state.h"
+#include<fstream>
+#include<string>
 
 // Building & Level Parsing using primitive parallel arrays
 bool loadBuildingMap(const char* filename,

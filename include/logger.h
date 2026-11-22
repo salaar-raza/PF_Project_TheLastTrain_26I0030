@@ -3,8 +3,6 @@
 
 #include "state.h"
 
-using namespace std;
-
 // State Persistence using primitive variables
 bool saveGameStateToFile(const char* filename,
                          int playerFloor, int playerRoom,
@@ -12,10 +10,7 @@ bool saveGameStateToFile(const char* filename,
                          const char inventory[MAX_INVENTORY_CAPACITY], int inventoryCount,
                          const bool objectives[NUM_OBJECTIVES], int emergencyTripsLeft,
                          const char roomEntities[NUM_FLOORS][ROOMS_PER_FLOOR][MAX_ENTITIES_PER_ROOM],
-                         const int entityCounts[NUM_FLOORS][ROOMS_PER_FLOOR])
-    {
-        
-    }
+                         const int entityCounts[NUM_FLOORS][ROOMS_PER_FLOOR]);
 
 bool loadGameStateFromFile(const char* filename,
                            int& playerFloor, int& playerRoom,
