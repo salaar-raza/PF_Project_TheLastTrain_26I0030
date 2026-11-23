@@ -19,7 +19,7 @@ bool saveGameStateToFile(const char* filename,
 
     if(!(outFile.is_open()))
     {
-        cout<<"Game could not be saved  properly."<<endl;
+        cout<<"Game could not be saved properly."<<endl;
         return false;
     }
 
@@ -249,4 +249,119 @@ bool loadGameStateFromFile(const char* filename,
     }
     File.close();
     return true;
+}
+
+void writeGameSummaryReport(const char* filename,
+                            int score, int remainingEnergy, int remainingTime,
+                            const bool objectives[NUM_OBJECTIVES], bool victory)
+{
+    ofstream Summary(filename);
+
+    if(!(Summary.is_open()))
+    {
+        cout<<"Summary report could not be written properly."<<endl;
+        return;
+    }
+    Summary<<"FINAL_SCORE: "<<score<<"\n";
+    Summary<<"REMAINING_ENERGY: "<<remainingEnergy<<"\n";
+    Summary<<"REMAINING_TIME: "<<remainingTime<<"\n";
+
+    Summary<<"MASTER_KEY: ";
+    if(objectives[OBJ_MASTER_KEY]==true)
+        Summary<<"YES\n";
+    else
+        Summary<<"NO\n";
+
+    Summary<<"CLUES_COLLECTED: ";
+    if(!(objectives[OBJ_CLUE_4] || objectives[OBJ_CLUE_2] || objectives[OBJ_CLUE_7]))
+        Summary<<"NONE";
+    else
+    {
+        if(objectives[OBJ_CLUE_4]==true)
+            Summary<<"4";
+        if(objectives[OBJ_CLUE_2]==true)
+            Summary<<"2";
+        if(objectives[OBJ_CLUE_7]==true)
+            Summary<<"7";
+    }
+
+    Summary<<"\nCABINET_UNLOCKED: ";
+    if(objectives[OBJ_CABINET_UNLOCKED]==true)
+        Summary<<"YES\n";
+    else
+        Summary<<"NO\n";
+
+    Summary<<"TRAIN_KEY: ";
+    if(objectives[OBJ_TRAIN_KEY]==true)
+        Summary<<"YES\n";
+    else
+        Summary<<"NO\n";
+
+    Summary<<"FUSE_COLLECTED: ";
+    if(objectives[OBJ_FUSE_COLLECTED]==true)
+        Summary<<"YES\n";
+    else
+        Summary<<"NO\n";
+
+    Summary<<"FUSE_INSTALLED: ";
+    if(objectives[OBJ_FUSE_INSTALLED]==true)
+        Summary<<"YES\n";
+    else
+        Summary<<"NO\n";
+
+    Summary<<"LIFT_PASS: ";
+    if(objectives[OBJ_LIFT_PASS]==true)
+        Summary<<"YES\n";
+    else
+        Summary<<"NO\n";
+
+    Summary<<"LIFT2_ACTIVE: ";
+    if(objectives[OBJ_LIFT2_ACTIVE]==true)
+        Summary<<"YES\n";
+    else
+        Summary<<"NO\n";
+
+    Summary<<"PASSENGER_RESCUED: ";
+    if(objectives[OBJ_PASSENGER_RESCUED]==true)
+        Summary<<"YES\n";
+    else
+        Summary<<"NO\n";
+
+    Summary<<"CAT_CARRIER: ";
+    if(objectives[OBJ_CAT_CARRIER]==true)
+        Summary<<"YES\n";
+    else
+        Summary<<"NO\n";
+
+    Summary<<"CAT_RESCUED: ";
+    if(objectives[OBJ_CAT_SECURED]==true)
+        Summary<<"YES\n";
+    else
+        Summary<<"NO\n";
+
+    Summary<<"TRAIN_PREPARED: ";
+    if(objectives[OBJ_TRAIN_PREPARED]==true)
+        Summary<<"YES\n";
+    else
+        Summary<<"NO\n";
+
+    Summary<<"MISSION_WON: ";
+    if(objectives[OBJ_MISSION_WON]==true)
+        Summary<<"YES\n";
+    else
+        Summary<<"NO\n";
+
+    Summary<<"MISSION_FAILED: ";
+    if(objectives[OBJ_MISSION_FAILED]==true)
+        Summary<<"YES\n";
+    else
+        Summary<<"NO\n";
+
+    Summary<<"VICTORY: ";
+    if(victory==true)
+        Summary<<"YES\n";
+    else
+        Summary<<"NO\n";
+
+    Summary.close();
 }

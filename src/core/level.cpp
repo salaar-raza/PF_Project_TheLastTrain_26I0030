@@ -109,7 +109,7 @@ bool loadBuildingMap(const char* filename,
                 for(int i=0; i<3; i++)
                 {
                     if(line[(j+(i+1)*12)-1]=='L' && i==1)
-                        horizontalConn[floor][i]='1';     //assigning '1' for lift 1
+                        horizontalConn[floor][i]='V';     //assigning 'V' for lift 1
                     else
                         horizontalConn[floor][i]=line[j+(i+1)*12];
                 }
