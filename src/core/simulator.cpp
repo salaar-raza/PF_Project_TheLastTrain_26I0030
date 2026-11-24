@@ -54,8 +54,8 @@ bool handleUnlockCabinetCommand(const char* code, int currentFloor, int currentR
 
                     roomEntities[currentFloor - 1][currentRoom - 1][entityCount-1] = ENT_NONE;
                     entityCount--;
-                    objectives[OBJ_TRAIN_KEY]=true;
-                    score+=SCORE_TRAIN_KEY;
+                    objectives[OBJ_CABINET_UNLOCKED]=true;
+                    score+=SCORE_CABINET_UNLOCK;
                     return true;
                 }
             }
@@ -89,6 +89,167 @@ bool handleUseCommand(char itemSymbol, int currentFloor, int currentRoom,
                 return true;
             }
         }
+    }
+    return false;
+}
+
+bool handleInspectCommand(int currentFloor, int currentRoom,
+                          int& energy, int& time,
+                          const char roomEntities[NUM_FLOORS][ROOMS_PER_FLOOR][MAX_ENTITIES_PER_ROOM],
+                          int entityCount,
+                          bool objectives[NUM_OBJECTIVES], int& score)
+{
+    if(objectives[OBJ_CLUE_4] && objectives[OBJ_CLUE_2] && objectives[OBJ_CLUE_7])
+        return false;
+
+    for(int i=0; i<entityCount; i++)
+    {
+        if(roomEntities[currentFloor-1][currentRoom-1][i]==ENT_CLUE_2 && !(objectives[OBJ_CLUE_2]))
+        {
+            objectives[OBJ_CLUE_2]=true;
+            applyScoreDelta(score, SCORE_CLUE_FOUND);
+        }
+        else if(roomEntities[currentFloor-1][currentRoom-1][i]==ENT_CLUE_4 && !(objectives[OBJ_CLUE_4]))
+        {
+            objectives[OBJ_CLUE_4]=true;
+            applyScoreDelta(score, SCORE_CLUE_FOUND);
+        }
+        else if(roomEntities[currentFloor-1][currentRoom-1][i]==ENT_CLUE_7 && !(objectives[OBJ_CLUE_7]))
+        {
+            objectives[OBJ_CLUE_7]=true;
+            applyScoreDelta(score, SCORE_CLUE_FOUND);
+        }
+    }
+
+    applyResourceDelta(energy, time, COST_INSPECT_ENERGY, COST_INSPECT_TIME);
+    return true;
+}
+bool handleCollectCommand(char itemSymbol, int currentFloor, int currentRoom,
+                          int& energy, int& time, int& score,
+                          char roomEntities[NUM_FLOORS][ROOMS_PER_FLOOR][MAX_ENTITIES_PER_ROOM],
+                          int& entityCount,
+                          char inventory[MAX_INVENTORY_CAPACITY], int& inventoryCount,
+                          bool objectives[NUM_OBJECTIVES])
+{
+    int itemFound=-1;
+    for(int i=0; i<entityCount; i++)
+    {
+        if(roomEntities[currentFloor-1][currentRoom-1][i]==itemSymbol)
+        {
+            itemFound=i;
+            break;
+        }
+    }
+    if(itemFound==-1)
+        return false;
+
+    if(hasItem(inventory, inventoryCount, itemSymbol))
+        return false;
+
+    if (itemSymbol == ENT_CLUE_2 || itemSymbol == ENT_CLUE_4 || itemSymbol == ENT_CLUE_7)
+        return false;
+    
+    if(itemSymbol!=ENT_ENERGY_PACK && itemSymbol!=ENT_EMERGENCY_TOOLKIT && itemSymbol!=ENT_OBSERVATION_TOKEN)
+    {
+        if(itemSymbol==ENT_MASTER_KEY)
+        {
+            objectives[OBJ_MASTER_KEY]=true;
+            applyResourceDelta(energy, time, COST_ITEM_PICKUP_ENERGY, COST_ITEM_PICKUP_TIME);
+        }
+        else if(itemSymbol==ENT_CABINET_TRAIN_KEY)
+        {
+            objectives[OBJ_TRAIN_KEY]=true;
+            applyResourceDelta(energy, time, COST_ITEM_PICKUP_ENERGY, COST_ITEM_PICKUP_TIME);
+            applyScoreDelta(score, SCORE_TRAIN_KEY);
+        }
+        else if(itemSymbol==ENT_FUSE)
+        {
+            objectives[OBJ_FUSE_COLLECTED]=true;
+            applyResourceDelta(energy, time, COST_ITEM_PICKUP_ENERGY, COST_ITEM_PICKUP_TIME);
+        }
+        else if(itemSymbol==ENT_MEDICAL_KIT)
+        {
+            applyResourceDelta(energy, time, COST_ITEM_PICKUP_ENERGY, COST_ITEM_PICKUP_TIME);
+        }
+        else if(itemSymbol==ENT_LIFT_PASS)
+        {
+            objectives[OBJ_LIFT_PASS]=true;
+            applyResourceDelta(energy, time, COST_ITEM_PICKUP_ENERGY, COST_ITEM_PICKUP_TIME);
+            applyScoreDelta(score, SCORE_LIFT_PASS);
+        }
+        else if(itemSymbol==ENT_EMERGENCY_CARD)
+        {
+            applyResourceDelta(energy, time, COST_ITEM_PICKUP_ENERGY, COST_ITEM_PICKUP_TIME);
+        }
+        else if(itemSymbol==ENT_CAT_CARRIER)
+        {
+            objectives[OBJ_CAT_CARRIER]=true;
+            applyResourceDelta(energy, time, COST_ITEM_PICKUP_ENERGY, COST_ITEM_PICKUP_TIME);
+        }
+        if(itemSymbol==ENT_CAT)
+        {
+            if(objectives[OBJ_CAT_CARRIER])
+                {
+                    applyResourceDelta(energy,time, COST_ITEM_PICKUP_ENERGY, COST_ITEM_PICKUP_TIME);
+                    applyScoreDelta(score, SCORE_SECURE_CAT);
+                    objectives[OBJ_CAT_SECURED]=true;
+                }
+            else
+                return false;
+        }
+        else
+        {
+            if(inventoryCount>=MAX_INVENTORY_CAPACITY)
+                return false;
+            
+            inventory[inventoryCount]=itemSymbol;
+            inventoryCount++;
+        }
+        for(int i=0; i<entityCount; i++)
+        {
+            if(roomEntities[currentFloor-1][currentRoom-1][i]==itemSymbol)
+            {
+                roomEntities[currentFloor-1][currentRoom-1][i]=ENT_NONE;
+
+                for(int j=i; j<entityCount-1; j++)
+                    roomEntities[currentFloor-1][currentRoom-1][j]=roomEntities[currentFloor-1][currentRoom-1][j+1];
+
+                entityCount--;
+                roomEntities[currentFloor-1][currentRoom-1][entityCount]=ENT_NONE;
+                break;
+            }
+        }
+        return true;
+    }
+    else
+    {
+        if(itemSymbol==ENT_ENERGY_PACK)
+        {
+            applyResourceDelta(energy, time, BONUS_ENERGY_PACK, 0);
+        }
+        else if(itemSymbol==ENT_EMERGENCY_TOOLKIT)
+        {
+            applyResourceDelta(energy, time, BONUS_EMERGENCY_TOOLKIT, 0);
+        }
+        else if(itemSymbol==ENT_OBSERVATION_TOKEN)
+        {
+            applyResourceDelta(energy, time, 0, BONUS_OBSERVATION_TOKEN);
+        }
+        for(int i=0; i<entityCount; i++)
+        {
+            if(roomEntities[currentFloor-1][currentRoom-1][i]==itemSymbol)
+            {
+                roomEntities[currentFloor-1][currentRoom-1][i]=ENT_NONE;
+
+                for(int j=i; j<entityCount-1; j++)
+                    roomEntities[currentFloor-1][currentRoom-1][j]=roomEntities[currentFloor-1][currentRoom-1][j+1];
+
+                entityCount--;
+                roomEntities[currentFloor-1][currentRoom-1][entityCount]=ENT_NONE;
+                break;
+            }
+        }
+        return true;
     }
     return false;
 }
