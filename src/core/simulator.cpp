@@ -253,3 +253,55 @@ bool handleCollectCommand(char itemSymbol, int currentFloor, int currentRoom,
     }
     return false;
 }
+bool handleMoveCommand(int targetFloor, int targetRoom,
+                       int& currentFloor, int& currentRoom,
+                       int& energy, int& time,
+                       const char horizontalConn[NUM_FLOORS][ROOMS_PER_FLOOR - 1],
+                       const char inventory[MAX_INVENTORY_CAPACITY], int inventoryCount,
+                       int& emergencyTripsLeft, bool lift2Operational)
+{
+    char connType='#';
+    if(!(isDirectlyConnected(currentFloor, currentRoom, targetFloor, targetRoom, horizontalConn, connType)))
+        return false;
+
+    if(!(canTraverse(targetFloor, targetRoom, connType, inventory, inventoryCount, emergencyTripsLeft, lift2Operational)))
+        return false;
+
+    if(connType==CONN_DOOR || connType==CONN_LOCKED_DOOR || connType=='S')
+    {
+        applyResourceDelta(energy, time, COST_MOVE_ORDINARY_ENERGY, COST_MOVE_ORDINARY_TIME);
+    }
+    else if(connType==CONN_WINDOW)
+    {
+        applyResourceDelta(energy, time, COST_MOVE_WINDOW_ENERGY, COST_MOVE_WINDOW_TIME);
+    }
+    else if(connType=='V')
+    {
+        applyResourceDelta(energy, time, COST_MOVE_LIFT_ENERGY, COST_MOVE_LIFT_TIME);
+    }
+    else if(connType=='X')
+    {
+        if(lift2Operational && hasItem(inventory, inventoryCount, ENT_LIFT_PASS))
+        {
+            applyResourceDelta(energy, time, COST_MOVE_LIFT_ENERGY, COST_MOVE_LIFT_TIME);
+        }
+        else if(hasItem(inventory, inventoryCount, ENT_EMERGENCY_CARD) && emergencyTripsLeft>0)
+        {
+            applyResourceDelta(energy, time, COST_MOVE_LIFT_ENERGY, COST_MOVE_LIFT_TIME);
+            emergencyTripsLeft--;
+        }
+        else
+            return false;
+    }
+    currentFloor=targetFloor;
+    currentRoom=targetRoom;
+    return true;
+
+}
+void runSimulation(int& playerFloor, int& playerRoom,
+                   int& energy, int& time, int& score,
+                   char inventory[MAX_INVENTORY_CAPACITY], int& inventoryCount,
+                   bool objectives[NUM_OBJECTIVES], int& emergencyTripsLeft,
+                   char horizontalConn[NUM_FLOORS][ROOMS_PER_FLOOR - 1],
+                   char roomEntities[NUM_FLOORS][ROOMS_PER_FLOOR][MAX_ENTITIES_PER_ROOM],
+                   int entityCounts[NUM_FLOORS][ROOMS_PER_FLOOR])
